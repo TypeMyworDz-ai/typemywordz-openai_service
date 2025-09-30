@@ -1,10 +1,11 @@
 # ====================================================================================================
-# frontend/openai_service/Dockerfile
+# frontend/openai_service/Dockerfile (UPDATED with newer base image)
 # Dockerfile for the dedicated OpenAI Whisper service
 # ====================================================================================================
 
 # Use an official Python runtime as a parent image
-FROM python:3.10-slim-buster
+# MODIFIED: Changed base image from buster to bullseye for updated repositories
+FROM python:3.10-slim-bullseye
 
 # Set the working directory in the container
 WORKDIR /app
