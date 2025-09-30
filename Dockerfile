@@ -1,10 +1,9 @@
 # ====================================================================================================
-# frontend/openai_service/Dockerfile (UPDATED with newer base image)
+# frontend/openai_service/Dockerfile (UPDATED to install build tools)
 # Dockerfile for the dedicated OpenAI Whisper service
 # ====================================================================================================
 
 # Use an official Python runtime as a parent image
-# MODIFIED: Changed base image from buster to bullseye for updated repositories
 FROM python:3.10-slim-bullseye
 
 # Set the working directory in the container
@@ -12,10 +11,13 @@ WORKDIR /app
 
 # Install system dependencies needed for pydub and PyAudio
 # ffmpeg is crucial for pydub
-# PortAudio is a dependency for PyAudio (often needs system-level install)
+# libportaudio2 and portaudio19-dev are for PyAudio
+# build-essential provides gcc and other build tools
 RUN apt-get update && apt-get install -y \
     ffmpeg \
     libportaudio2 \
+    portaudio19-dev \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
