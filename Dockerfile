@@ -1,5 +1,5 @@
 # ====================================================================================================
-# frontend/openai_service/Dockerfile (UPDATED to install build tools)
+# frontend/openai_service/Dockerfile (UPDATED to correct CMD instruction)
 # Dockerfile for the dedicated OpenAI Whisper service
 # ====================================================================================================
 
@@ -33,7 +33,7 @@ COPY . .
 EXPOSE 8000
 
 # Define the command to run your application
-# This should match the start command you set on Railway
-CMD ["uvicorn", "whisper_service:app", "--host", "0.0.0.0", "--port", "8000"]
+# MODIFIED: Use shell form for CMD to allow $PORT environment variable expansion
+CMD ["sh", "-c", "uvicorn whisper_service:app --host 0.0.0.0 --port $PORT"]
 
 # ====================================================================================================
