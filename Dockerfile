@@ -34,6 +34,6 @@ EXPOSE 8000
 
 # Define the command to run your application
 # MODIFIED: Use shell form for CMD to allow $PORT environment variable expansion
-CMD ["python", "openai_service.py"]
+CMD ["python", "whisper_service.py"]
 
 # ====================================================================================================
