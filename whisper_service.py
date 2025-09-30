@@ -1,5 +1,5 @@
 # ====================================================================================================
-# frontend/whisper-service/whisper_service.py
+# frontend/openai_service/whisper_service.py (FINAL CORRECTION for Imports and Env Var Loading)
 # Dedicated FastAPI service for OpenAI Whisper transcription.
 # ====================================================================================================
 
@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import openai
 from pydub import AudioSegment
+from typing import Optional # ADDED: Import Optional
 
 # Configure logging
 logging.basicConfig(
@@ -28,10 +29,10 @@ logger = logging.getLogger(__name__)
 
 logger.info("=== STARTING OPENAI WHISPER SERVICE ===")
 
-# Load environment variables (for local testing, Railway injects them)
-load_dotenv()
+# REMOVED load_dotenv() as Railway injects env vars directly
+# load_dotenv() 
 
-# Access OpenAI API Key
+# Access OpenAI API Key directly from os.environ
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 
 logger.info(f"DEBUG: Environment variable 'OPENAI_API_KEY' found: {bool(OPENAI_API_KEY)}")
@@ -129,8 +130,8 @@ async def transcribe_audio_openai(
             transcript = openai_client.audio.transcriptions.create(
                 model="whisper-1",
                 file=audio_file,
-                language=language_code,
-                response_format="json"
+                language=language_code, # Pass language code
+                response_format="json" # Ensure JSON response
             )
         
         transcription_text = transcript.text
@@ -162,5 +163,5 @@ async def root():
     return {"message": "OpenAI Whisper Transcription Service is running!"}
 
 # ====================================================================================================
-# END frontend/whisper-service/whisper_service.py
+# END frontend/openai_service/whisper_service.py
 # ====================================================================================================
