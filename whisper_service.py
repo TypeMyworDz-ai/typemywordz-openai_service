@@ -1,5 +1,5 @@
 # ====================================================================================================
-# frontend/openai_service/whisper_service.py (FINAL CORRECTION for Imports and Env Var Loading)
+# frontend/openai_service/whisper_service.py (FINAL CORRECTION for Proxy Initialization)
 # Dedicated FastAPI service for OpenAI Whisper transcription.
 # ====================================================================================================
 
@@ -15,7 +15,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import openai
 from pydub import AudioSegment
-from typing import Optional # ADDED: Import Optional
+from typing import Optional
+import httpx # ADDED: Import httpx to customize HTTP client
 
 # Configure logging
 logging.basicConfig(
@@ -46,7 +47,10 @@ if not OPENAI_API_KEY:
 openai_client = None
 if OPENAI_API_KEY:
     try:
-        openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        # MODIFIED: Explicitly create an httpx.Client with no proxies
+        # and pass it to openai.OpenAI to prevent unexpected 'proxies' argument.
+        custom_http_client = httpx.Client(proxies=None) 
+        openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, http_client=custom_http_client)
         logger.info("OpenAI client initialized successfully for Whisper service.")
     except Exception as e:
         logger.error(f"Error initializing OpenAI client for Whisper service: {e}")
