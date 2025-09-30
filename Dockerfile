@@ -34,6 +34,6 @@ EXPOSE 8000
 
 # Define the command to run your application
 # MODIFIED: Use shell form for CMD to allow $PORT environment variable expansion
-CMD ["sh", "-c", "uvicorn whisper_service:app --host 0.0.0.0 --port $PORT"]
+CMD ["python", "openai_service.py"]
 
 # ====================================================================================================
