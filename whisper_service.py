@@ -1,5 +1,5 @@
 # ====================================================================================================
-# frontend/openai_service/whisper_service.py (FINAL CORRECTION for Proxy Initialization - Attempt 2)
+# frontend/openai_service/whisper_service.py (FINAL CORRECTION for Proxy Initialization - Attempt 3)
 # Dedicated FastAPI service for OpenAI Whisper transcription.
 # ====================================================================================================
 
@@ -47,25 +47,11 @@ if not OPENAI_API_KEY:
 openai_client = None
 if OPENAI_API_KEY:
     try:
-        # NEW: Forcefully remove common proxy environment variables before initializing OpenAI client.
+        # NEW: Create an httpx.Client with trust_env=False to explicitly ignore all proxy environment variables.
         # This is the most robust way to prevent the 'proxies' argument error.
-        # Store original values to restore them later if needed (though unlikely in this service).
-        _original_http_proxy = os.environ.pop('HTTP_PROXY', None)
-        _original_https_proxy = os.environ.pop('HTTPS_PROXY', None)
-        _original_no_proxy = os.environ.pop('NO_PROXY', None)
-        
-        # Initialize OpenAI client without explicitly passing proxies,
-        # as they have been removed from the environment.
-        openai_client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        custom_http_client = httpx.Client(trust_env=False) 
+        openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, http_client=custom_http_client)
         logger.info("OpenAI client initialized successfully for Whisper service.")
-
-        # Restore original proxy environment variables if they existed (optional, but good practice)
-        if _original_http_proxy is not None:
-            os.environ['HTTP_PROXY'] = _original_http_proxy
-        if _original_https_proxy is not None:
-            os.environ['HTTPS_PROXY'] = _original_https_proxy
-        if _original_no_proxy is not None:
-            os.environ['NO_PROXY'] = _original_no_proxy
 
     except Exception as e:
         logger.error(f"Error initializing OpenAI client for Whisper service: {e}")
