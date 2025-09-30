@@ -47,11 +47,24 @@ if not OPENAI_API_KEY:
 openai_client = None
 if OPENAI_API_KEY:
     try:
-        # MODIFIED: Explicitly create an httpx.Client with no proxies
-        # and pass it to openai.OpenAI to prevent unexpected 'proxies' argument.
+        # NEW: Explicitly clear proxy environment variables before initializing httpx.Client
+        # This is the most robust way to prevent the 'proxies' argument error.
+        original_http_proxy = os.environ.pop('HTTP_PROXY', None)
+        original_https_proxy = os.environ.pop('HTTPS_PROXY', None)
+        original_no_proxy = os.environ.pop('NO_PROXY', None)
+        
         custom_http_client = httpx.Client(proxies=None) 
         openai_client = openai.OpenAI(api_key=OPENAI_API_KEY, http_client=custom_http_client)
         logger.info("OpenAI client initialized successfully for Whisper service.")
+
+        # Restore original proxy environment variables if they existed
+        if original_http_proxy is not None:
+            os.environ['HTTP_PROXY'] = original_http_proxy
+        if original_https_proxy is not None:
+            os.environ['HTTPS_PROXY'] = original_https_proxy
+        if original_no_proxy is not None:
+            os.environ['NO_PROXY'] = original_no_proxy
+
     except Exception as e:
         logger.error(f"Error initializing OpenAI client for Whisper service: {e}")
 else:
