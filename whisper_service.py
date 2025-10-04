@@ -1,5 +1,5 @@
 # ======================================================================================
-# frontend/openai_service/whisper_service.py (UPDATED to include Deepgram)
+# frontend/openai_service/whisper_service.py (UPDATED and SYNTAX-FIXED to include Deepgram)
 # Dedicated FastAPI service for OpenAI Whisper transcription, GPT Formatting, AND Deepgram transcription.
 # ======================================================================================
 
@@ -21,14 +21,54 @@ import json # Added for Deepgram response handling
 
 # Add Deepgram imports
 try:
-    from deepgram import DeepgramClient, PrerecordedOptions
+    # Attempt import for DeepgramClient and PrerecordedOptions
+    # These might be directly under 'deepgram' or in submodules like 'deepgram.options'
+    _deepgram_client_imported = False
+    _prerecorded_options_imported = False
+    
+    try:
+        from deepgram import DeepgramClient
+        _deepgram_client_imported = True
+    except ImportError:
+        try:
+            from deepgram.client import DeepgramClient
+            _deepgram_client_imported = True
+        except ImportError:
+            pass # DeepgramClient not found yet
+
+    try:
+        from deepgram import PrerecordedOptions
+        _prerecorded_options_imported = True
+    except ImportError:
+        try:
+            from deepgram.options import PrerecordedOptions
+            _prerecorded_options_imported = True
+        except ImportError:
+            pass # PrerecordedOptions not found yet
+
+    if not _deepgram_client_imported:
+        raise ImportError("DeepgramClient could not be found.")
+    if not _prerecorded_options_imported:
+        raise ImportError("PrerecordedOptions could not be found.")
+
 except ImportError as e:
     DeepgramClient = None
     PrerecordedOptions = None
     logging.warning(f"Deepgram SDK not installed or import error: {e}. Deepgram features will be disabled.")
+else:
+    # Only assign if successfully imported
+    if _deepgram_client_imported:
+        # DeepgramClient is already assigned from one of the above successful imports
+        pass 
+    else:
+        DeepgramClient = None # Fallback in case of unexpected partial import
+    if _prerecorded_options_imported:
+        # PrerecordedOptions is already assigned from one of the above successful imports
+        pass
+    else:
+        PrerecordedOptions = None # Fallback in case of unexpected partial import
 
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -88,15 +128,15 @@ else:
     logger.warning("OpenAI API key is missing, OpenAI clients will not be initialized.")
 
 # NEW: Deepgram Client initialization
-deepgram_client = None
-if DEEPGRAM_API_KEY and DeepgramClient: # Check if DeepgramClient was successfully imported
+deepgram_client = None # This will remain None, as we are calling an external service
+if DEEPGRAM_API_KEY and DeepgramClient and PrerecordedOptions: # Check if Deepgram components were successfully imported
     try:
         deepgram_client = DeepgramClient(DEEPGRAM_API_KEY)
         logger.info("Deepgram client initialized successfully.")
     except Exception as e:
         logger.error(f"Error initializing Deepgram client: {e}")
 else:
-    logger.warning("Deepgram API key is missing or SDK not installed, Deepgram client will not be initialized.")
+    logger.warning("Deepgram API key is missing or SDK components not found. Deepgram client will not be initialized.")
 
 
 app = FastAPI(title="OpenAI Whisper, GPT, & Deepgram Transcription/Formatting Service") # UPDATED Title
@@ -213,8 +253,9 @@ async def transcribe_audio_deepgram(
 ):
     logger.info(f"Deepgram transcription endpoint called for file: {file.filename}, language: {language_code}, speaker_labels: {speaker_labels_enabled}")
 
-    if not deepgram_client:
-        raise HTTPException(status_code=503, detail="Deepgram service is not initialized (API key missing or SDK not installed).")
+    # Check if Deepgram client was successfully initialized
+    if not deepgram_client or not PrerecordedOptions: # Ensure PrerecordedOptions is also available
+        raise HTTPException(status_code=503, detail="Deepgram service is not initialized (API key missing or SDK components not found).")
 
     # Save uploaded file temporarily
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.filename)[1]) as tmp:
